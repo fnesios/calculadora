@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculadora de Custos — Impressão 3D</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
+
+  :root{
+    --ink: #1b2430;
+    --ink-dim: #4d5b6b;
+    --bg: #f3f5f7;
+    --panel: #ffffff;
+    --panel-2: #f6f8f9;
+    --line: #dde3e9;
+    --teal: #12a996;
+    --teal-deep: #0d8577;
+    --violet: #6c4fe0;
+    --muted: #8592a1;
+    --radius: 12px;
+  }
+
+  *{ box-sizing: border-box; }
+
+  body{
+    margin: 0;
+    background:
+      radial-gradient(circle at 1px 1px, #d7dde3 1px, transparent 1px) 0 0 / 24px 24px,
+      var(--bg);
+    font-family: 'Manrope', sans-serif;
+    color: var(--ink);
+    min-height: 100vh;
+    padding: 32px 16px 64px;
+  }
+
+  .wrap{
+    max-width: 880px;
+    margin: 0 auto;
+  }
+
+  header{
+    margin-bottom: 28px;
+  }
+
+  .eyebrow{
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--teal);
+    margin: 0 0 6px;
+    font-weight: 600;
+  }
+
+  h1{
+    font-family: 'Manrope', sans-serif;
+    font-size: 34px;
+    font-weight: 800;
+    margin: 0;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+  }
+
+  .grid{
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: 20px;
+  }
+  @media (max-width: 720px){ .grid{ grid-template-columns: 1fr; } }
+
+  .card{
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 22px 24px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 2px rgba(20,30,40,0.04);
+  }
+
+  .card-title{
+    font-family: 'Manrope', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+    margin: 0 0 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card-title .num{
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--teal);
+  }
+  .card-hint{
+    font-size: 12.5px;
+    color: var(--muted);
+    margin: 0 0 16px;
+  }
+
+  .field{
+    margin-bottom: 14px;
+  }
+  .field:last-child{ margin-bottom: 0; }
+  .field label{
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: var(--ink);
+  }
+  .field-pair{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .input-row{
+    display: flex;
+    align-items: center;
+    border: 1.5px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--panel-2);
+    transition: border-color .15s;
+  }
+  .input-row:focus-within{ border-color: var(--teal); }
+  .input-row input{
+    flex: 1;
+    border: none;
+    outline: none;
+    padding: 10px 12px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 14px;
+    color: var(--ink);
+    background: transparent;
+    min-width: 0;
+  }
+  .input-row input::placeholder{ color: var(--muted); }
+  .input-row .unit{
+    padding: 0 12px;
+    font-size: 12px;
+    color: var(--muted);
+    font-family: 'IBM Plex Mono', monospace;
+    border-left: 1px solid var(--line);
+    height: 100%;
+    display: flex;
+    align-items: center;
+    background: #eef1f4;
+    white-space: nowrap;
+  }
+
+  .stat-box{
+    margin-top: 14px;
+    padding: 14px 16px;
+    background: linear-gradient(135deg, rgba(53,208,184,0.14), rgba(139,124,246,0.08));
+    border: 1px solid rgba(53,208,184,0.35);
+    border-radius: 10px;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .stat-box .stat-label{
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-dim);
+    font-weight: 700;
+  }
+  .stat-box .stat-value{
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--teal);
+    letter-spacing: -0.01em;
+  }
+
+  .result-card{
+    background: var(--panel-2);
+    border-color: var(--line);
+    position: sticky;
+    top: 20px;
+  }
+
+  .result-line{
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--line);
+    font-size: 13.5px;
+  }
+  .result-line span:first-child{ color: var(--ink-dim); }
+  .result-line span:last-child{
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .result-line.profit span:last-child{ color: var(--teal); }
+  .result-line.section-break{
+    border-bottom: none;
+    padding-top: 14px;
+    margin-top: 4px;
+    border-top: 1px dashed var(--line);
+  }
+  .result-line.section-break span:first-child{
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+  }
+
+  .final-price{
+    margin-top: 18px;
+    padding-top: 4px;
+    text-align: left;
+  }
+  .final-price .label{
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--ink-dim);
+    margin-bottom: 4px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .final-price .value{
+    font-family: 'Manrope', sans-serif;
+    font-size: 42px;
+    font-weight: 800;
+    color: var(--violet);
+    line-height: 1;
+  }
+  .final-price .total-note{
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--muted);
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  .gauge{
+    margin-top: 18px;
+    height: 6px;
+    border-radius: 999px;
+    background: var(--line);
+    overflow: hidden;
+    position: relative;
+  }
+  .gauge-fill{
+    height: 100%;
+    background: linear-gradient(90deg, var(--teal-deep), var(--violet));
+    border-radius: 999px;
+    transition: width .25s ease;
+  }
+  .gauge-label{
+    display: flex;
+    justify-content: space-between;
+    font-size: 10.5px;
+    color: var(--muted);
+    margin-top: 6px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">Precificação · Impressão 3D</p>
+    <h1>Calculadora de Custos</h1>
+  </header>
+
+  <div class="grid">
+    <div>
+
+      <div class="card">
+        <p class="card-title"><span class="num">01</span> Filamento</p>
+        <p class="card-hint">Preço do pacote comprado.</p>
+        <div class="field">
+          <label>Preço e peso do pacote</label>
+          <div class="field-pair">
+            <div class="input-row">
+              <span class="unit">R$</span>
+              <input type="number" id="precoPacote" step="0.01" inputmode="decimal">
+            </div>
+            <div class="input-row">
+              <input type="number" id="pesoPacote" step="0.01" inputmode="decimal">
+              <span class="unit">kg</span>
+            </div>
+          </div>
+          <div class="stat-box">
+            <span class="stat-label">Preço por grama</span>
+            <span class="stat-value" id="precoGrama">R$ 0,0000</span>
+          </div>
+        </div>
+        <div class="field">
+          <label>Quantidade usada nesta impressão</label>
+          <div class="input-row">
+            <input type="number" id="gramas" step="1" inputmode="decimal">
+            <span class="unit">gramas</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <p class="card-title"><span class="num">02</span> Energia</p>
+        <p class="card-hint">Consumo elétrico durante a impressão.</p>
+        <div class="field">
+          <label>Tarifa de energia</label>
+          <div class="input-row">
+            <span class="unit">R$</span>
+            <input type="number" id="tarifa" step="0.01" inputmode="decimal">
+            <span class="unit">/ kWh</span>
+          </div>
+        </div>
+        <div class="field">
+          <label>Consumo médio da impressora</label>
+          <div class="input-row">
+            <input type="number" id="watts" step="1" inputmode="decimal">
+            <span class="unit">W</span>
+          </div>
+        </div>
+        <div class="field">
+          <label>Duração da impressão</label>
+          <div class="input-row">
+            <input type="number" id="horas" step="0.1" inputmode="decimal">
+            <span class="unit">horas</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <p class="card-title"><span class="num">03</span> Itens impressos</p>
+        <p class="card-hint">Quando a impressão gera mais de uma peça, o filamento e a energia gastos são divididos entre elas.</p>
+        <div class="field">
+          <label>Quantidade de itens nesta impressão</label>
+          <div class="input-row">
+            <input type="number" id="itens" step="1" min="1" inputmode="numeric">
+            <span class="unit">un.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <p class="card-title"><span class="num">04</span> Margem de lucro</p>
+        <p class="card-hint">Cobre tempo de trabalho, desgaste da impressora e falhas de impressão — não só o material.</p>
+        <div class="field">
+          <label>Margem sobre o custo</label>
+          <div class="input-row">
+            <input type="number" id="margem" step="1" inputmode="decimal">
+            <span class="unit">%</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div>
+      <div class="card result-card">
+        <p class="card-title">Resultado</p>
+        <div class="result-line">
+          <span>Custo do filamento (total)</span>
+          <span id="rFilamento">R$ 0,00</span>
+        </div>
+        <div class="result-line">
+          <span>Custo de energia (total)</span>
+          <span id="rEnergia">R$ 0,00</span>
+        </div>
+        <div class="result-line">
+          <span>Custo total da impressão</span>
+          <span id="rCusto">R$ 0,00</span>
+        </div>
+
+        <div class="result-line section-break">
+          <span>Por item (<span id="rItens">1</span> un.)</span>
+        </div>
+        <div class="result-line">
+          <span>Custo por item</span>
+          <span id="rCustoItem">R$ 0,00</span>
+        </div>
+        <div class="result-line profit">
+          <span>Lucro por item (<span id="rMargemPct">0</span>%)</span>
+          <span id="rLucroItem">R$ 0,00</span>
+        </div>
+
+        <div class="final-price">
+          <p class="label">Preço final por item</p>
+          <p class="value" id="rFinal">R$ 0,00</p>
+          <p class="total-note" id="rTotalNote"></p>
+        </div>
+
+        <div class="gauge">
+          <div class="gauge-fill" id="gaugeFill" style="width: 0%"></div>
+        </div>
+        <div class="gauge-label">
+          <span>custo</span>
+          <span>lucro</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const ids = ['precoPacote','pesoPacote','gramas','tarifa','watts','horas','itens','margem'];
+  const el = Object.fromEntries(ids.map(id => [id, document.getElementById(id)]));
+
+  const DEFAULTS_KEY = 'defaults:calculadora-3d';
+  const fallback = { precoPacote: 90, pesoPacote: 1, tarifa: 0.70, watts: 175, margem: 200 };
+
+  function fmt(v){
+    return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  }
+  function fmt4(v){
+    return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 4, maximumFractionDigits: 4 });
+  }
+
+  function calc(){
+    const precoPacote = parseFloat(el.precoPacote.value) || 0;
+    const pesoPacote = parseFloat(el.pesoPacote.value) || 0;
+    const gramas = parseFloat(el.gramas.value) || 0;
+    const tarifa = parseFloat(el.tarifa.value) || 0;
+    const watts = parseFloat(el.watts.value) || 0;
+    const horas = parseFloat(el.horas.value) || 0;
+    const itens = Math.max(1, parseFloat(el.itens.value) || 1);
+    const margem = parseFloat(el.margem.value) || 0;
+
+    const precoGrama = pesoPacote > 0 ? precoPacote / (pesoPacote * 1000) : 0;
+    document.getElementById('precoGrama').textContent = fmt4(precoGrama);
+
+    const custoFilamento = precoGrama * gramas;
+    const custoEnergia = (watts / 1000) * horas * tarifa;
+    const custoTotal = custoFilamento + custoEnergia;
+
+    const custoItem = custoTotal / itens;
+    const lucroItem = custoItem * (margem / 100);
+    const precoFinalItem = custoItem + lucroItem;
+    const precoFinalTotal = precoFinalItem * itens;
+
+    document.getElementById('rFilamento').textContent = fmt(custoFilamento);
+    document.getElementById('rEnergia').textContent = fmt(custoEnergia);
+    document.getElementById('rCusto').textContent = fmt(custoTotal);
+    document.getElementById('rItens').textContent = itens.toFixed(0);
+    document.getElementById('rCustoItem').textContent = fmt(custoItem);
+    document.getElementById('rMargemPct').textContent = margem.toFixed(0);
+    document.getElementById('rLucroItem').textContent = fmt(lucroItem);
+    document.getElementById('rFinal').textContent = fmt(precoFinalItem);
+    document.getElementById('rTotalNote').textContent =
+      itens > 1 ? `total da impressão (${itens.toFixed(0)} itens): ${fmt(precoFinalTotal)}` : '';
+
+    const gaugePct = precoFinalItem > 0 ? Math.min(100, (lucroItem / precoFinalItem) * 100) : 0;
+    document.getElementById('gaugeFill').style.width = gaugePct + '%';
+  }
+
+  ids.forEach(id => el[id].addEventListener('input', () => { calc(); scheduleSave(); }));
+
+  let saveTimer = null;
+  function scheduleSave(){
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(saveDefaults, 800);
+  }
+
+  async function saveDefaults(){
+    const data = {
+      precoPacote: parseFloat(el.precoPacote.value) || fallback.precoPacote,
+      pesoPacote: parseFloat(el.pesoPacote.value) || fallback.pesoPacote,
+      tarifa: parseFloat(el.tarifa.value) || fallback.tarifa,
+      watts: parseFloat(el.watts.value) || fallback.watts,
+      margem: parseFloat(el.margem.value) || fallback.margem,
+    };
+    try { await window.storage.set(DEFAULTS_KEY, JSON.stringify(data), true); } catch (e) {}
+  }
+
+  async function loadDefaults(){
+    let data = fallback;
+    try {
+      const result = await window.storage.get(DEFAULTS_KEY, true);
+      if (result) data = JSON.parse(result.value);
+    } catch (e) {}
+    el.precoPacote.value = data.precoPacote ?? fallback.precoPacote;
+    el.pesoPacote.value = data.pesoPacote ?? fallback.pesoPacote;
+    el.tarifa.value = data.tarifa ?? fallback.tarifa;
+    el.watts.value = data.watts ?? fallback.watts;
+    el.margem.value = data.margem ?? fallback.margem;
+    el.gramas.value = 132;
+    el.horas.value = 4;
+    el.itens.value = 1;
+    calc();
+  }
+
+  loadDefaults();
+</script>
+</body>
+</html>
